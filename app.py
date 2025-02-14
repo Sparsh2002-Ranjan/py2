@@ -10,17 +10,28 @@ CORS(app, resources={r"/*": {"origins": "https://studywave-sr.netlify.app"}})
 def load_summarizer():
     return pipeline(
         "summarization",
-        model="facebook/bart-base",  # Lighter model
-        device=-1  # Forces CPU for stability
+        model="facebook/bart-base",
+        device=-1  
     )
 
 def preprocess_text(text, max_tokens=200):
     text = re.sub(r'\s+', ' ', text).strip()
     return " ".join(text.split()[:max_tokens])
 
+@app.after_request
+def add_cors_headers(response):
+    response.headers["Access-Control-Allow-Origin"] = "https://studywave-sr.netlify.app"
+    response.headers["Access-Control-Allow-Methods"] = "GET, POST, OPTIONS"
+    response.headers["Access-Control-Allow-Headers"] = "Content-Type"
+    return response
+
 @app.route('/', methods=['GET'])
 def home():
     return jsonify({"message": "Welcome to the Optimized Summarization API!"})
+
+@app.route('/summarize', methods=['OPTIONS'])
+def handle_options():
+    return '', 204  # Preflight request handling
 
 @app.route('/summarize', methods=['POST'])
 def summarize_text():
@@ -34,7 +45,7 @@ def summarize_text():
         min_length = max(30, len(processed_text.split()) // 5)
         max_length = min(80, len(processed_text.split()) // 2)
 
-        summarizer = load_summarizer()  # Load model only when needed
+        summarizer = load_summarizer()
         summary = summarizer(
             processed_text,
             max_length=max_length,
