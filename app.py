@@ -1,3 +1,4 @@
+import os
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 from transformers import pipeline
@@ -9,9 +10,9 @@ CORS(app, resources={r"/*": {"origins": "https://studywave-sr.netlify.app"}})
 
 summarizer = pipeline(
     "summarization",
-    model="sshleifer/distilbart-cnn-6-6",  
-    device=0 if torch.cuda.is_available() else -1,  
-    torch_dtype=torch.float16 if torch.cuda.is_available() else torch.float32  
+    model="sshleifer/distilbart-cnn-6-6",
+    device=0 if torch.cuda.is_available() else -1,
+    torch_dtype=torch.float16 if torch.cuda.is_available() else torch.float32
 )
 
 def preprocess_text(text, max_tokens=300):
@@ -47,4 +48,5 @@ def summarize_text():
         return jsonify({"error": f"An error occurred: {str(e)}"}), 500
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000)
+    port = int(os.environ.get('PORT', 5000))  # Use Render's assigned port
+    app.run(host='0.0.0.0', port=port)
