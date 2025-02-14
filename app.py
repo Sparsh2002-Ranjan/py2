@@ -7,14 +7,13 @@ import re
 app = Flask(__name__)
 CORS(app, resources={r"/*": {"origins": "https://studywave-sr.netlify.app"}})
 
-def load_summarizer():
-    return pipeline(
-        "summarization",
-        model="facebook/bart-base",
-        device=-1  
-    )
+summarizer = pipeline(
+    "summarization",
+    model="sshleifer/distilbart-cnn-6-6",  # Lighter model
+    device=-1
+)
 
-def preprocess_text(text, max_tokens=200):
+def preprocess_text(text, max_tokens=150):  # Reduce max tokens to lower memory usage
     text = re.sub(r'\s+', ' ', text).strip()
     return " ".join(text.split()[:max_tokens])
 
@@ -27,11 +26,11 @@ def add_cors_headers(response):
 
 @app.route('/', methods=['GET'])
 def home():
-    return jsonify({"message": "Welcome to the Optimized Summarization API!"})
+    return jsonify({"message": "Welcome to the Summarization API!"})
 
 @app.route('/summarize', methods=['OPTIONS'])
 def handle_options():
-    return '', 204  # Preflight request handling
+    return '', 204
 
 @app.route('/summarize', methods=['POST'])
 def summarize_text():
@@ -45,7 +44,6 @@ def summarize_text():
         min_length = max(30, len(processed_text.split()) // 5)
         max_length = min(80, len(processed_text.split()) // 2)
 
-        summarizer = load_summarizer()
         summary = summarizer(
             processed_text,
             max_length=max_length,
