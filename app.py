@@ -13,7 +13,7 @@ summarizer = pipeline(
     device=-1
 )
 
-def preprocess_text(text, max_tokens=150):  # Reduce max tokens to lower memory usage
+def preprocess_text(text, max_tokens=100):  # Reduce max tokens to lower memory usage
     text = re.sub(r'\s+', ' ', text).strip()
     return " ".join(text.split()[:max_tokens])
 
